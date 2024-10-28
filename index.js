@@ -33,6 +33,7 @@ const userSchema = new mongoose.Schema({
     followers: [{ id: String, email: String }],
     nickName: String,
     email: String,
+    password:Number,
     description: String,
     note: String,
     current: [{ email: String }],
@@ -45,6 +46,8 @@ const postSchema = new mongoose.Schema({
     id: String,
     userId: Number,
     email: String,
+    email: String,
+
     username: String,
     userImg: String,
     post: String,
