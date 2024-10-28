@@ -61,11 +61,24 @@ const commentSchema = new mongoose.Schema({
     timestamp: String
 });
 
+// New message schema
+const messageSchema = new mongoose.Schema({
+    id: String,
+    sender: String,
+    receiver: String,
+    text: String,
+    time: String,
+    status: String,
+    audio: String, // Optional field
+    video: String  // Optional field
+});
+
 // Create models
 const Account = mongoose.model('Account', accountSchema);
 const User = mongoose.model('User', userSchema);
 const Post = mongoose.model('Post', postSchema);
 const Comment = mongoose.model('Comment', commentSchema);
+const Message = mongoose.model('Message', messageSchema); // Message model
 
 // API routes with error handling
 // Accounts
@@ -236,7 +249,49 @@ app.delete('/comments/:id', async (req, res) => {
     }
 });
 
-// Start server
+// Messages
+app.get('/messages', async (req, res) => {
+    try {
+        const messages = await Message.find();
+        res.json(messages);
+    } catch (err) {
+        console.error("Error fetching messages:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+app.post('/messages', async (req, res) => {
+    try {
+        const message = new Message(req.body);
+        await message.save();
+        res.json(message);
+    } catch (err) {
+        console.error("Error creating message:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+app.put('/messages/:id', async (req, res) => {
+    try {
+        const message = await Message.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        res.json(message);
+    } catch (err) {
+        console.error("Error updating message:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+app.delete('/messages/:id', async (req, res) => {
+    try {
+        await Message.findByIdAndDelete(req.params.id);
+        res.json({ message: 'Message deleted' });
+    } catch (err) {
+        console.error("Error deleting message:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+// Start the server
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
