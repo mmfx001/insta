@@ -57,6 +57,14 @@ const postSchema = new mongoose.Schema({
     comments: Array,
     description: String
 });
+const realsSchema = new mongoose.Schema({
+    id: { type: Number, required: true }, // Ensure that the id is required
+    videoUrl: { type: String, required: true }, // Ensure that videoUrl is required
+    description: { type: String, required: true }, // Ensure that description is required
+    likes: { type: Number, default: 0 }, // Set default likes to 0
+    comments: { type: [String], default: [] }, // Array of strings for comments
+    sharedWith: { type: [String], default: [] } // Array of strings for sharedWith
+});
 
 const commentSchema = new mongoose.Schema({
     id: Number,
@@ -82,6 +90,7 @@ const messageSchema = new mongoose.Schema({
 const Account = mongoose.model('Account', accountSchema);
 const User = mongoose.model('User', userSchema);
 const Post = mongoose.model('Post', postSchema);
+const Reels = mongoose.model('Reels', realsSchema);
 const Comment = mongoose.model('Comment', commentSchema);
 const Message = mongoose.model('Message', messageSchema); // Message model
 
@@ -181,6 +190,15 @@ app.get('/posts', async (req, res) => {
     }
 });
 
+app.get('/reels', async (req, res) => {
+    try {
+        const reels = await Reels.find();
+        res.json(reels);
+    } catch (err) {
+        console.error("Error fetching posts:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
 app.post('/posts', async (req, res) => {
     try {
         const post = new Post(req.body);
@@ -188,6 +206,28 @@ app.post('/posts', async (req, res) => {
         res.json(post);
     } catch (err) {
         console.error("Error creating post:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+app.post('/reels', async (req, res) => {
+    try {
+        const reels = new Reels(req.body);
+        await reels.save();
+        res.json(reels);
+    } catch (err) {
+        console.error("Error creating post:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+app.get('/users/:id', async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        res.json(user);
+    } catch (err) {
+        console.error("Error fetching user by ID:", err);
         res.status(500).json({ message: "Server error" });
     }
 });
@@ -202,9 +242,28 @@ app.put('/posts/:id', async (req, res) => {
     }
 });
 
+app.put('/reels/:id', async (req, res) => {
+    try {
+        const reels = await Reels.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        res.json(reels);
+    } catch (err) {
+        console.error("Error updating post:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
 app.delete('/posts/:id', async (req, res) => {
     try {
         await Post.findByIdAndDelete(req.params.id);
+        res.json({ message: 'Post deleted' });
+    } catch (err) {
+        console.error("Error deleting post:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+app.delete('/reels/:id', async (req, res) => {
+    try {
+        await Reels.findByIdAndDelete(req.params.id);
         res.json({ message: 'Post deleted' });
     } catch (err) {
         console.error("Error deleting post:", err);
