@@ -33,7 +33,7 @@ const userSchema = new mongoose.Schema({
     followers: [{ id: String, email: String }],
     nickName: String,
     email: String,
-    password:Number,
+    password: String, // Parolni matn sifatida belgilang
     description: String,
     note: String,
     current: [{ email: String }],
@@ -41,6 +41,7 @@ const userSchema = new mongoose.Schema({
     stories: [{ id: Number, text: String, image: String }],
     likeItems: [{ id: String, userId: Number }]
 });
+
 
 const postSchema = new mongoose.Schema({
     id: String,
