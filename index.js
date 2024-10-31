@@ -2,10 +2,15 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const http = require('http');
+const socketIo = require('socket.io');
 
 const app = express();
 const PORT = process.env.PORT || 5002;
 
+
+const server = http.createServer(app);
+const io = socketIo(server); 
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
@@ -104,6 +109,16 @@ const Live = mongoose.model('Live', liveSchema);
 const Comment = mongoose.model('Comment', commentSchema);
 const Message = mongoose.model('Message', messageSchema); // Message model
 
+
+io.on('connection', (socket) => {
+    console.log('A user connected:', socket.id);
+
+    socket.on('disconnect', () => {
+        console.log('User disconnected:', socket.id);
+    });
+
+    // You can handle events here
+});
 // API routes with error handling
 // Accounts
 app.get('/accounts', async (req, res) => {
