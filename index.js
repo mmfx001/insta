@@ -57,6 +57,15 @@ const postSchema = new mongoose.Schema({
     comments: Array,
     description: String
 });
+const liveSchema = new mongoose.Schema({
+    id: { type: Number, required: true },
+    email: { type: String, required: true },
+    username:  { type: String, required: true },
+    startTime:  { type: String, required: true },
+    videoTitle:  { type: String, required: true },
+    status: { type: String, required: true },
+    roomId:  { type: String, required: true }
+});
 const realsSchema = new mongoose.Schema({
     id: { type: Number, required: true }, // Ensure that the id is required
     videoUrl: { type: String, required: true }, // Ensure that videoUrl is required
@@ -91,6 +100,7 @@ const Account = mongoose.model('Account', accountSchema);
 const User = mongoose.model('User', userSchema);
 const Post = mongoose.model('Post', postSchema);
 const Reels = mongoose.model('Reels', realsSchema);
+const Live = mongoose.model('Live', liveSchema);
 const Comment = mongoose.model('Comment', commentSchema);
 const Message = mongoose.model('Message', messageSchema); // Message model
 
@@ -189,6 +199,16 @@ app.get('/posts', async (req, res) => {
         res.status(500).json({ message: "Server error" });
     }
 });
+app.get('/live', async (req, res) => {
+    try {
+        const lives = await Live.find();
+        res.json(lives);
+    } catch (err) {
+        console.error("Error fetching posts:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
 
 app.get('/reels', async (req, res) => {
     try {
@@ -209,6 +229,19 @@ app.post('/posts', async (req, res) => {
         res.status(500).json({ message: "Server error" });
     }
 });
+
+app.post('/live', async (req, res) => {
+    try {
+        const lives = new Live(req.body);
+        await lives.save();
+        res.json(lives);
+    } catch (err) {
+        console.error("Error creating post:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+
 app.post('/reels', async (req, res) => {
     try {
         const reels = new Reels(req.body);
@@ -241,7 +274,15 @@ app.put('/posts/:id', async (req, res) => {
         res.status(500).json({ message: "Server error" });
     }
 });
-
+app.put('/live/:id', async (req, res) => {
+    try {
+        const lives = await Live.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        res.json(lives);
+    } catch (err) {
+        console.error("Error updating post:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
 app.put('/reels/:id', async (req, res) => {
     try {
         const reels = await Reels.findByIdAndUpdate(req.params.id, req.body, { new: true });
@@ -261,6 +302,18 @@ app.delete('/posts/:id', async (req, res) => {
         res.status(500).json({ message: "Server error" });
     }
 });
+
+app.delete('/live/:id', async (req, res) => {
+    try {
+        await Live.findByIdAndDelete(req.params.id);
+        res.json({ message: 'Post deleted' });
+    } catch (err) {
+        console.error("Error deleting post:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+
 app.delete('/reels/:id', async (req, res) => {
     try {
         await Reels.findByIdAndDelete(req.params.id);
