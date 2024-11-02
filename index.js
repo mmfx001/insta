@@ -45,7 +45,7 @@ const userSchema = new mongoose.Schema({
     current: [{ email: String }],
     avatar: String,
     stories: [{ id: Number, text: String, image: String }],
-    likeItems: [{ id: String, userId: Number }],
+    likeItems: [String],
     saved: [{ id: String, userId: Number }]
 });
 
