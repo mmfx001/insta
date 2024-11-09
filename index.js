@@ -7,9 +7,8 @@ const socketIo = require('socket.io');
 
 const app = express();
 const PORT = process.env.PORT || 5002;
-
 const server = http.createServer(app);
-const io = socketIo(server); 
+const io = socketIo(server); // Initialize socket.io with HTTP server
 
 // Middleware
 app.use(cors());
@@ -22,7 +21,7 @@ mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => console.log('MongoDB connected'))
     .catch(err => {
         console.error("MongoDB connection error:", err);
-        process.exit(1); // If the connection fails, the app will stop
+        process.exit(1); // Exit if connection fails
     });
 
 // Define schemas
@@ -88,7 +87,6 @@ const commentSchema = new mongoose.Schema({
     timestamp: String
 });
 
-// New message schema
 const messageSchema = new mongoose.Schema({
     id: String,
     sender: String,
@@ -100,84 +98,7 @@ const messageSchema = new mongoose.Schema({
     video: String  // Optional field
 });
 
-// Helper function to create CRUD routes
-const createCRUDRoutes = (model, modelName) => {
-    const router = express.Router();
-
-    // GET All items
-    router.get('/', async (req, res) => {
-        try {
-            const items = await model.find();
-            res.json(items);
-        } catch (err) {
-            console.error(`GET /${modelName.toLowerCase()} error:`, err.message);
-            res.status(500).json({ message: err.message });
-        }
-    });
-
-    // GET Single item by id
-    router.get('/:id', getItem(model, modelName), (req, res) => {
-        res.json(res.item);
-    });
-
-    // POST New item
-    router.post('/', async (req, res) => {
-        const item = new model(req.body);
-        try {
-            const newItem = await item.save();
-            res.status(201).json(newItem);
-        } catch (err) {
-            console.error(`POST /${modelName.toLowerCase()} error:`, err.message);
-            res.status(400).json({ message: err.message });
-        }
-    });
-
-    // PUT Update item by id
-    router.put('/:id', getItem(model, modelName), async (req, res) => {
-        Object.assign(res.item, req.body);
-        try {
-            const updatedItem = await res.item.save();
-            res.json(updatedItem);
-        } catch (err) {
-            console.error(`PUT /${modelName.toLowerCase()}/${req.params.id} error:`, err.message);
-            res.status(400).json({ message: err.message });
-        }
-    });
-
-    // DELETE item by id
-    router.delete('/:id', getItem(model, modelName), async (req, res) => {
-        try {
-            await res.item.remove();
-            res.json({ message: `${modelName} deleted` });
-        } catch (err) {
-            console.error(`DELETE /${modelName.toLowerCase()}/${req.params.id} error:`, err.message);
-            res.status(500).json({ message: err.message });
-        }
-    });
-
-    return router;
-};
-
-// Middleware to fetch a single item by id
-function getItem(model, modelName) {
-    return async (req, res, next) => {
-        let item;
-        try {
-            item = await model.findOne({ id: req.params.id });
-            if (!item) {
-                return res.status(404).json({ message: `${modelName} not found` });
-            }
-        } catch (err) {
-            console.error(`GET_ITEM /${modelName.toLowerCase()}/${req.params.id} error:`, err.message);
-            return res.status(500).json({ message: err.message });
-        }
-
-        res.item = item;
-        next();
-    };
-}
-
-// Create models from schemas
+// Models
 const Account = mongoose.model('Account', accountSchema);
 const User = mongoose.model('User', userSchema);
 const Post = mongoose.model('Post', postSchema);
@@ -186,45 +107,134 @@ const Live = mongoose.model('Live', liveSchema);
 const Comment = mongoose.model('Comment', commentSchema);
 const Message = mongoose.model('Message', messageSchema);
 
-// MongoDB connection events
+// Create CRUD routes for models
+const createCRUDRoutes = (model, modelName) => {
+    const router = express.Router();
+
+    // GET Barcha Ma'lumotlar
+    router.get('/', async (req, res) => {
+        try {
+            const items = await model.find();
+            res.json(items);
+        } catch (err) {
+            console.error(`GET /${modelName.toLowerCase()} xatosi:`, err.message);
+            res.status(500).json({ message: err.message });
+        }
+    });
+
+    // GET Bitta Ma'lumot
+    router.get('/:id', getItem(model, modelName), (req, res) => {
+        res.json(res.item);
+    });
+
+    // POST Yangi Ma'lumot Qo'shish
+    router.post('/', async (req, res) => {
+        console.log(`POST /${modelName.toLowerCase()}`);
+        console.log('Request Body:', req.body);
+        const item = new model(req.body);
+        try {
+            const newItem = await item.save();
+            res.status(201).json(newItem);
+        } catch (err) {
+            console.error(`POST /${modelName.toLowerCase()} xatosi:`, err.message);
+            res.status(400).json({ message: err.message });
+        }
+    });
+
+    // PUT Ma'lumotni Yangilash
+    router.put('/:id', getItem(model, modelName), async (req, res) => {
+        Object.assign(res.item, req.body);
+        try {
+            const updatedItem = await res.item.save();
+            res.json(updatedItem);
+        } catch (err) {
+            console.error(`PUT /${modelName.toLowerCase()}/${req.params.id} xatosi:`, err.message);
+            res.status(400).json({ message: err.message });
+        }
+    });
+
+    // DELETE Ma'lumotni O'chirish
+    router.delete('/:id', getItem(model, modelName), async (req, res) => {
+        try {
+            await res.item.remove();
+            res.json({ message: `${modelName} o'chirildi` });
+        } catch (err) {
+            console.error(`DELETE /${modelName.toLowerCase()}/${req.params.id} xatosi:`, err.message);
+            res.status(500).json({ message: err.message });
+        }
+    });
+
+    return router;
+};
+
+// Middleware: Ma'lumotni Topish
+function getItem(model, modelName) {
+    return async (req, res, next) => {
+        let item;
+        try {
+            item = await model.findOne({ id: req.params.id });
+            if (item == null) {
+                return res.status(404).json({ message: `${modelName} topilmadi` });
+            }
+        } catch (err) {
+            console.error(`GET_ITEM /${modelName.toLowerCase()}/${req.params.id} xatosi:`, err.message);
+            return res.status(500).json({ message: err.message });
+        }
+
+        res.item = item;
+        next();
+    };
+}
+
+// Routerlarni Ulash
+app.use('/accounts', createCRUDRoutes(Account, 'Account'));
+app.use('/users', createCRUDRoutes(User, 'User'));
+app.use('/posts', createCRUDRoutes(Post, 'Post'));
+app.use('/reels', createCRUDRoutes(Reels, 'Reels'));
+app.use('/lives', createCRUDRoutes(Live, 'Live'));
+app.use('/comments', createCRUDRoutes(Comment, 'Comment'));
+app.use('/messages', createCRUDRoutes(Message, 'Message'));
+
+// MongoDB ulanish hodisalarini kuzatish
 mongoose.connection.on('connected', () => {
-    console.log('Mongoose: Connected to MongoDB');
+    console.log('Mongoose: MongoDB ga muvaffaqiyatli ulandi');
 });
 
 mongoose.connection.on('error', (err) => {
-    console.error('Mongoose: Connection error:', err);
+    console.error('Mongoose: Ulanish xatosi:', err);
 });
 
 mongoose.connection.on('disconnected', () => {
-    console.log('Mongoose: Disconnected from MongoDB');
+    console.log('Mongoose: MongoDB bilan ulanish uzildi');
 });
 
-// Start the server and connect to MongoDB
+// MongoDB ga ulanish va serverni ishga tushurish
 const startServer = async () => {
     try {
         await mongoose.connect(uri, { 
             useNewUrlParser: true,
             useUnifiedTopology: true,
-            connectTimeoutMS: 30000, // 30 seconds timeout
-            socketTimeoutMS: 45000  // 45 seconds socket timeout
+            connectTimeoutMS: 30000, // 30 soniya timeout
+            socketTimeoutMS: 45000  // 45 soniya socket timeout
         });
-        console.log('MongoDB connected');
+        console.log('MongoDB ga ulandi');
 
+        const PORT = process.env.PORT || 5002;
         server.listen(PORT, () => {
-            console.log(`Server is running on port ${PORT}`);
+            console.log(`Server ${PORT} portda ishlamoqda`);
         }).on('error', (err) => {
             if (err.code === 'EADDRINUSE') {
-                console.error(`Port ${PORT} is already in use. Please choose another port.`);
+                console.error(`Port ${PORT} allaqachon ishlatilmoqda. Iltimos, boshqa portni tanlang.`);
                 process.exit(1);
             } else {
-                console.error('Server error:', err);
+                console.error('Server xatosi:', err);
             }
         });
     } catch (err) {
-        console.error('MongoDB connection error:', err.message);
-        process.exit(1); // Exit if MongoDB connection fails
+        console.error('MongoDB ulanish xatosi:', err.message);
+        process.exit(1); // Ulanish muvaffaqiyatsiz bo'lsa, jarayonni tugatish
     }
 };
 
-// Start the server
+// Serverni boshlash
 startServer();
