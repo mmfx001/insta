@@ -141,14 +141,15 @@ const createCRUDRoutes = (model, modelName) => {
         }
     });
 
-    // PUT Ma'lumotni Yangilash
-    router.put('/:id', getItem(model, modelName), async (req, res) => {
+    // In your PUT route for updating posts
+    router.put('/:id', getItem(Post, 'Post'), async (req, res) => {
+        console.log("Request Data:", req.body); // Log incoming data for debugging
         Object.assign(res.item, req.body);
         try {
             const updatedItem = await res.item.save();
             res.json(updatedItem);
         } catch (err) {
-            console.error(`PUT /${modelName.toLowerCase()}/${req.params.id} xatosi:`, err.message);
+            console.error(`PUT /posts/${req.params.id} xatosi:`, err.message);
             res.status(400).json({ message: err.message });
         }
     });
@@ -211,7 +212,7 @@ mongoose.connection.on('disconnected', () => {
 // MongoDB ga ulanish va serverni ishga tushurish
 const startServer = async () => {
     try {
-        await mongoose.connect(uri, { 
+        await mongoose.connect(uri, {
             useNewUrlParser: true,
             useUnifiedTopology: true,
             connectTimeoutMS: 30000, // 30 soniya timeout
