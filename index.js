@@ -6,7 +6,7 @@ const http = require('http');
 const socketIo = require('socket.io');
 
 const app = express();
-const PORT = process.env.PORT || 5002;
+const PORT = process.env.PORT || 500;
 const server = http.createServer(app);
 const io = socketIo(server); // Initialize socket.io with HTTP server
 
@@ -141,7 +141,6 @@ const createCRUDRoutes = (model, modelName) => {
         }
     });
 
-    // PUT Ma'lumotni Yangilash
     router.put('/:id', getItem(model, modelName), async (req, res) => {
         Object.assign(res.item, req.body);
         try {
@@ -152,6 +151,8 @@ const createCRUDRoutes = (model, modelName) => {
             res.status(400).json({ message: err.message });
         }
     });
+
+    
 
     // DELETE Ma'lumotni O'chirish
     router.delete('/:id', getItem(model, modelName), async (req, res) => {
@@ -211,7 +212,7 @@ mongoose.connection.on('disconnected', () => {
 // MongoDB ga ulanish va serverni ishga tushurish
 const startServer = async () => {
     try {
-        await mongoose.connect(uri, { 
+        await mongoose.connect(uri, {
             useNewUrlParser: true,
             useUnifiedTopology: true,
             connectTimeoutMS: 30000, // 30 soniya timeout
